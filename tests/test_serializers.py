@@ -1,7 +1,8 @@
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from jsondataclass.serializers import (
     DefaultSerializer,
+    DictSerializer,
     ListSerializer,
     SerializerFactory,
     StringSerializer,
@@ -49,6 +50,13 @@ def test_serializer_factory_get_tuple_serializer():
     assert isinstance(factory.get_serializer(Tuple[int, ...]), TupleSerializer)
 
 
+def test_serializer_factory_get_dict_serializer():
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(dict), DictSerializer)
+    assert isinstance(factory.get_serializer(Dict), DictSerializer)
+    assert isinstance(factory.get_serializer(Dict[str, int]), DictSerializer)
+
+
 def test_string_serializer():
     data = "foo"
     serializer = StringSerializer()
@@ -75,3 +83,13 @@ def test_tuple_serializer():
     assert serializer.deserialize(list_data, Tuple[int, ...]) == tuple_data
     assert serializer.deserialize(list_data, Tuple[int, int, int]) == tuple_data
     assert serializer.serialize(tuple_data) == list_data
+
+
+def test_dict_serializer():
+    data = {"a": 1, "b": 2, "c": 3}
+    serializer = DictSerializer()
+    assert serializer.deserialize(data, dict) == data
+    assert serializer.deserialize(data, Dict) == data
+    assert serializer.deserialize(data, Dict[str, int]) == data
+    assert serializer.deserialize(data, Dict[str, str]) == {"a": "1", "b": "2", "c": "3"}
+    assert serializer.serialize(data) == data

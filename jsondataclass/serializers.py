@@ -90,7 +90,34 @@ class TupleSerializer(Serializer[Tuple]):
         return self._deserilize_generic(data, type_)
 
 
-SERIALIZERS: tuple = ((str, StringSerializer), (list, ListSerializer), (tuple, TupleSerializer))
+class DictSerializer(Serializer[Dict]):
+    def serialize(self, data: Dict) -> Dict:
+        result = {}
+        for key, value in data.items():
+            serializer = self._serializer_factory.get_serializer(type(value))
+            result[str(key)] = serializer.serialize(value)
+        return result
+
+    def _deserialize_generic(self, data: dict, type_: Type[Dict]) -> Dict:
+        key_type, value_type = extract_generic_args(type_)[:2]
+        if isinstance(key_type, TypeVar):
+            return dict(data)
+        serializer = self._serializer_factory.get_serializer(value_type)
+        return dict((key_type(key), serializer.deserialize(value, value_type)) for key, value in data.items())
+
+    def deserialize(self, data: dict, type_: Type[Dict]) -> Dict:
+        type_check(data, dict)
+        if not is_generic(type_):
+            return dict(data)
+        return self._deserialize_generic(data, type_)
+
+
+SERIALIZERS: tuple = (
+    (str, StringSerializer),
+    (list, ListSerializer),
+    (tuple, TupleSerializer),
+    (dict, DictSerializer),
+)
 
 
 class SerializerFactory:
