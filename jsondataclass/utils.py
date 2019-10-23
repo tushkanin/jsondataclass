@@ -34,3 +34,10 @@ def extract_generic_origin(type_: Type[Any]) -> Any:
     if is_optional(type_):
         return Optional
     return type_.__origin__
+
+
+def type_check(data: Any, type_: Type):
+    from .exceptions import WrongTypeError
+
+    if not isinstance(data, type_):
+        raise WrongTypeError(type_, data)

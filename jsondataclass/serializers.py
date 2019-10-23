@@ -1,9 +1,9 @@
 from abc import abstractmethod
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Collection, Dict, Generic, List, Optional, Tuple, Type, TypeVar
 
 from .config import Config
-from .exceptions import WrongTypeError
-from .utils import extract_generic_args, extract_generic_origin, is_generic, is_subclass
+from .exceptions import TupleTypeMatchError
+from .utils import extract_generic_args, extract_generic_origin, is_generic, is_subclass, type_check
 
 T = TypeVar("T")
 
@@ -42,25 +42,55 @@ class StringSerializer(Serializer[str]):
         return str(data)
 
 
+def _serialize_collection(data: Collection, serializer_factory: "SerializerFactory") -> List:
+    result = []
+    for value in data:
+        serializer = serializer_factory.get_serializer(type(value))
+        result.append(serializer.serialize(value))
+    return result
+
+
 class ListSerializer(Serializer[List]):
     def serialize(self, data: List) -> List:
-        result = []
-        for value in data:
-            serializer = self._serializer_factory.get_serializer(type(value))
-            result.append(serializer.serialize(value))
-        return result
+        return _serialize_collection(data, self._serializer_factory)
 
     def deserialize(self, data: list, type_: Type[List]) -> List:
-        if not isinstance(data, list):
-            raise WrongTypeError(list, data)
+        type_check(data, list)
         if not is_generic(type_):
-            return type_(data)
+            return list(data)
         item_type = extract_generic_args(type_)[0]
         serializer = self._serializer_factory.get_serializer(item_type)
         return list(serializer.deserialize(item, item_type) for item in data)
 
 
-SERIALIZERS: tuple = ((str, StringSerializer), (list, ListSerializer))
+class TupleSerializer(Serializer[Tuple]):
+    def serialize(self, data: Tuple) -> List:
+        return _serialize_collection(data, self._serializer_factory)
+
+    def _deserilize_generic(self, data: list, type_: Type[Tuple]) -> Tuple:
+        item_types = extract_generic_args(type_)
+        if len(item_types) == 0:
+            return tuple(data)
+        if len(item_types) == 2 and item_types[1] is Ellipsis:
+            item_type = item_types[0]
+            serializer = self._serializer_factory.get_serializer(item_type)
+            return tuple(serializer.deserialize(item, item_type) for item in data)
+        if len(item_types) != len(data):
+            raise TupleTypeMatchError(type_, data)
+        result = []
+        for item, item_type in zip(data, item_types):
+            serializer = self._serializer_factory.get_serializer(item_type)
+            result.append(serializer.deserialize(item, item_type))
+        return tuple(result)
+
+    def deserialize(self, data: list, type_: Type[Tuple]) -> Tuple:
+        type_check(data, list)
+        if not is_generic(type_):
+            return tuple(data)
+        return self._deserilize_generic(data, type_)
+
+
+SERIALIZERS: tuple = ((str, StringSerializer), (list, ListSerializer), (tuple, TupleSerializer))
 
 
 class SerializerFactory:

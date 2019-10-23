@@ -1,5 +1,8 @@
 from typing import Collection, Dict, List, Mapping, Optional, Union
 
+import pytest
+
+from jsondataclass.exceptions import WrongTypeError
 from jsondataclass.utils import (
     extract_generic_args,
     extract_generic_origin,
@@ -7,6 +10,7 @@ from jsondataclass.utils import (
     is_optional,
     is_subclass,
     is_union,
+    type_check,
 )
 
 
@@ -36,3 +40,12 @@ def test_extract_generic_args():
 
 def test_extract_generic_origin():
     assert extract_generic_origin(List[int]) is list
+
+
+def test_type_check():
+    type_check(1, int)
+
+
+def test_type_check_fail():
+    with pytest.raises(WrongTypeError):
+        type_check(1, str)

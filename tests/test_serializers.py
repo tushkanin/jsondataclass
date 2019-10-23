@@ -1,6 +1,12 @@
-from typing import List
+from typing import List, Tuple
 
-from jsondataclass.serializers import DefaultSerializer, ListSerializer, SerializerFactory, StringSerializer
+from jsondataclass.serializers import (
+    DefaultSerializer,
+    ListSerializer,
+    SerializerFactory,
+    StringSerializer,
+    TupleSerializer,
+)
 
 
 def test_default_serializer():
@@ -36,6 +42,13 @@ def test_serializer_factory_get_list_serializer():
     assert isinstance(factory.get_serializer(List[int]), ListSerializer)
 
 
+def test_serializer_factory_get_tuple_serializer():
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(tuple), TupleSerializer)
+    assert isinstance(factory.get_serializer(Tuple), TupleSerializer)
+    assert isinstance(factory.get_serializer(Tuple[int, ...]), TupleSerializer)
+
+
 def test_string_serializer():
     data = "foo"
     serializer = StringSerializer()
@@ -51,3 +64,14 @@ def test_list_serializer():
     assert serializer.deserialize(data, List[int]) == data
     assert serializer.deserialize(data, List[str]) == ["1", "2", "3"]
     assert serializer.serialize(data) == data
+
+
+def test_tuple_serializer():
+    list_data = [1, 2, 3]
+    tuple_data = (1, 2, 3)
+    serializer = TupleSerializer()
+    assert serializer.deserialize(list_data, tuple) == tuple_data
+    assert serializer.deserialize(list_data, Tuple) == tuple_data
+    assert serializer.deserialize(list_data, Tuple[int, ...]) == tuple_data
+    assert serializer.deserialize(list_data, Tuple[int, int, int]) == tuple_data
+    assert serializer.serialize(tuple_data) == list_data

@@ -1,6 +1,8 @@
 from dataclasses import Field
 from typing import Any, Type
 
+from .utils import extract_generic_args
+
 
 class JsonDataClassError(Exception):
     ...
@@ -21,3 +23,13 @@ class WrongTypeError(JsonDataClassError):
 
     def __str__(self) -> str:
         return f"Expected value of a type: {self._expected_type!r}, but received: {type(self._value)!r}"
+
+
+class TupleTypeMatchError(JsonDataClassError):
+    def __init__(self, tuple_type: Type, value: list):
+        self._tuple_type = tuple_type
+        self._value = value
+
+    def __str__(self) -> str:
+        expected_length = len(extract_generic_args(self._tuple_type))
+        return f"Expected list with length: {expected_length}, but received: {len(self._value)}"
