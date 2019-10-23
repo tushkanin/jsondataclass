@@ -1,8 +1,9 @@
 from abc import abstractmethod
-from typing import Any, Dict, Generic, Optional, Type, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from .config import Config
-from .utils import extract_generic_origin, is_generic, is_subclass
+from .exceptions import WrongTypeError
+from .utils import extract_generic_args, extract_generic_origin, is_generic, is_subclass
 
 T = TypeVar("T")
 
@@ -41,7 +42,25 @@ class StringSerializer(Serializer[str]):
         return str(data)
 
 
-SERIALIZERS: tuple = ((str, StringSerializer),)
+class ListSerializer(Serializer[List]):
+    def serialize(self, data: List) -> List:
+        result = []
+        for value in data:
+            serializer = self._serializer_factory.get_serializer(type(value))
+            result.append(serializer.serialize(value))
+        return result
+
+    def deserialize(self, data: list, type_: Type[List]) -> List:
+        if not isinstance(data, list):
+            raise WrongTypeError(list, data)
+        if not is_generic(type_):
+            return type_(data)
+        item_type = extract_generic_args(type_)[0]
+        serializer = self._serializer_factory.get_serializer(item_type)
+        return list(serializer.deserialize(item, item_type) for item in data)
+
+
+SERIALIZERS: tuple = ((str, StringSerializer), (list, ListSerializer))
 
 
 class SerializerFactory:

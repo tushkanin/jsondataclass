@@ -1,4 +1,6 @@
-from jsondataclass.serializers import DefaultSerializer, SerializerFactory, StringSerializer
+from typing import List
+
+from jsondataclass.serializers import DefaultSerializer, ListSerializer, SerializerFactory, StringSerializer
 
 
 def test_default_serializer():
@@ -27,8 +29,25 @@ def test_serializer_factory_get_string_serializer():
     assert isinstance(factory.get_serializer(str), StringSerializer)
 
 
+def test_serializer_factory_get_list_serializer():
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(list), ListSerializer)
+    assert isinstance(factory.get_serializer(List), ListSerializer)
+    assert isinstance(factory.get_serializer(List[int]), ListSerializer)
+
+
 def test_string_serializer():
     data = "foo"
     serializer = StringSerializer()
     assert serializer.deserialize(data, str) == data
+    assert serializer.serialize(data) == data
+
+
+def test_list_serializer():
+    data = [1, 2, 3]
+    serializer = ListSerializer()
+    assert serializer.deserialize(data, list) == data
+    assert serializer.deserialize(data, List) == data
+    assert serializer.deserialize(data, List[int]) == data
+    assert serializer.deserialize(data, List[str]) == ["1", "2", "3"]
     assert serializer.serialize(data) == data
