@@ -1,4 +1,4 @@
-from jsondataclass.serializers import DefaultSerializer, SerializerFactory
+from jsondataclass.serializers import DefaultSerializer, SerializerFactory, StringSerializer
 
 
 def test_default_serializer():
@@ -20,3 +20,15 @@ def test_serializer_factory_get_serializer_class():
 def test_serializer_factory_get_default_serializer():
     factory = SerializerFactory()
     assert isinstance(factory.get_serializer(int), DefaultSerializer)
+
+
+def test_serializer_factory_get_string_serializer():
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(str), StringSerializer)
+
+
+def test_string_serializer():
+    data = "foo"
+    serializer = StringSerializer()
+    assert serializer.deserialize(data, str) == data
+    assert serializer.serialize(data) == data

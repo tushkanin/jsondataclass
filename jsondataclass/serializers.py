@@ -33,7 +33,15 @@ class DefaultSerializer(Serializer[Any]):
         return data
 
 
-SERIALIZERS: tuple = tuple()
+class StringSerializer(Serializer[str]):
+    def serialize(self, data: Any) -> str:
+        return str(data)
+
+    def deserialize(self, data: Any, type_: Type[str]) -> str:
+        return str(data)
+
+
+SERIALIZERS: tuple = ((str, StringSerializer),)
 
 
 class SerializerFactory:
