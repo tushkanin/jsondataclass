@@ -1,6 +1,12 @@
+from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
+import pytest
+
+from jsondataclass.exceptions import MissingDefaultValueError, WrongTypeError
+from jsondataclass.field import jsonfield
 from jsondataclass.serializers import (
+    DataClassSerializer,
     DefaultSerializer,
     DictSerializer,
     ListSerializer,
@@ -8,6 +14,7 @@ from jsondataclass.serializers import (
     StringSerializer,
     TupleSerializer,
 )
+from jsondataclass.utils import set_forward_refs
 
 
 def test_default_serializer():
@@ -57,6 +64,16 @@ def test_serializer_factory_get_dict_serializer():
     assert isinstance(factory.get_serializer(Dict[str, int]), DictSerializer)
 
 
+def test_serializer_factory_get_dataclass_serializer():
+    @dataclass
+    class Data:
+        foo: int
+        bar: str
+
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(Data), DataClassSerializer)
+
+
 def test_string_serializer():
     data = "foo"
     serializer = StringSerializer()
@@ -93,3 +110,144 @@ def test_dict_serializer():
     assert serializer.deserialize(data, Dict[str, int]) == data
     assert serializer.deserialize(data, Dict[str, str]) == {"a": "1", "b": "2", "c": "3"}
     assert serializer.serialize(data) == data
+
+
+def test_dataclass_serializer():
+    @dataclass
+    class Data:
+        foo: int
+        bar: str
+
+    data_dict = {"foo": 1, "bar": "2"}
+    data = Data(foo=1, bar="2")
+    serializer = DataClassSerializer()
+    assert serializer.deserialize(data_dict, Data) == data
+    assert serializer.serialize(data) == data_dict
+
+
+def test_dataclass_serializer_wrong_data():
+    @dataclass
+    class Data:
+        foo: int
+        bar: str
+
+    serializer = DataClassSerializer()
+    with pytest.raises(WrongTypeError):
+        serializer.deserialize(1, Data)
+
+
+def test_dataclass_serializer_nested_dataclass():
+    @dataclass
+    class Nested:
+        foo: int
+        bar: str
+
+    @dataclass
+    class Data:
+        foo: int
+        bar: Nested
+
+    data_dict = {"foo": 1, "bar": {"foo": 2, "bar": "3"}}
+    data = Data(foo=1, bar=Nested(foo=2, bar="3"))
+    serializer = DataClassSerializer()
+    assert serializer.deserialize(data_dict, Data) == data
+    assert serializer.serialize(data) == data_dict
+
+
+def test_dataclass_serializer_field_forward_reference():
+    @dataclass
+    class Foo:
+        foo: int
+        bar: "Bar"
+
+    @dataclass
+    class Bar:
+        foo: int
+        bar: str
+
+    set_forward_refs(Foo, {"Bar": Bar})
+    data_dict = {"foo": 1, "bar": {"foo": 2, "bar": "3"}}
+    data = Foo(foo=1, bar=Bar(foo=2, bar="3"))
+    serializer = DataClassSerializer()
+    assert serializer.deserialize(data_dict, Foo) == data
+    assert serializer.serialize(data) == data_dict
+
+
+def test_dataclass_serializer_field_serialized_name():
+    @dataclass
+    class Data:
+        foo: int = jsonfield("foo_foo")
+        bar: str
+
+    data_dict = {"foo_foo": 1, "bar": "2"}
+    data = Data(foo=1, bar="2")
+    serializer = DataClassSerializer()
+    assert serializer.deserialize(data_dict, Data) == data
+    assert serializer.serialize(data) == data_dict
+
+
+def test_dataclass_serializer_field_default():
+    @dataclass
+    class Data:
+        foo: int
+        bar: str = "2"
+
+    data_dict = {"foo": 1}
+    data = Data(foo=1, bar="2")
+    serializer = DataClassSerializer()
+    assert serializer.deserialize(data_dict, Data) == data
+    data_dict["bar"] = "2"
+    assert serializer.serialize(data) == data_dict
+
+
+def test_dataclass_serializer_field_default_factory():
+    @dataclass
+    class Data:
+        foo: int
+        bar: str = jsonfield(default_factory=lambda: "2")
+
+    data_dict = {"foo": 1}
+    data = Data(foo=1, bar="2")
+    serializer = DataClassSerializer()
+    assert serializer.deserialize(data_dict, Data) == data
+    data_dict["bar"] = "2"
+    assert serializer.serialize(data) == data_dict
+
+
+def test_dataclass_serializer_deserialize_missing_field():
+    @dataclass
+    class Data:
+        foo: int
+        bar: str
+
+    data_dict = {"foo": 1}
+    serializer = DataClassSerializer()
+    with pytest.raises(MissingDefaultValueError):
+        serializer.deserialize(data_dict, Data)
+
+
+def test_dataclass_serializer_serialize_none_field():
+    @dataclass
+    class Data:
+        foo: int
+        bar: str
+
+    data = Data(foo=1, bar=None)
+    serializer = DataClassSerializer()
+    with pytest.raises(MissingDefaultValueError):
+        serializer.serialize(data)
+
+
+def test_dataclass_serializer_field_serializer():
+    @dataclass
+    class Data:
+        foo: int = jsonfield(serializer_class=StringSerializer)
+        bar: str
+
+    data_dict = {"foo": 1, "bar": "2"}
+    data = Data(foo="1", bar="2")
+    serializer = DataClassSerializer()
+    assert serializer.deserialize(data_dict, Data) == data
+    data_dict = {"foo": "1", "bar": "2"}
+    data = Data(foo=1, bar="2")
+    assert serializer.serialize(data) == data_dict

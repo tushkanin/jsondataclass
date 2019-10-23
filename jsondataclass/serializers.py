@@ -3,7 +3,17 @@ from typing import Any, Collection, Dict, Generic, List, Optional, Tuple, Type, 
 
 from .config import Config
 from .exceptions import TupleTypeMatchError
-from .utils import extract_generic_args, extract_generic_origin, is_generic, is_subclass, type_check
+from .field import JsonField
+from .typing import DataClass
+from .utils import (
+    dataclass_fields,
+    extract_generic_args,
+    extract_generic_origin,
+    is_generic,
+    is_optional,
+    is_subclass,
+    type_check,
+)
 
 T = TypeVar("T")
 
@@ -100,7 +110,7 @@ class DictSerializer(Serializer[Dict]):
 
     def _deserialize_generic(self, data: dict, type_: Type[Dict]) -> Dict:
         key_type, value_type = extract_generic_args(type_)[:2]
-        if isinstance(key_type, TypeVar):
+        if isinstance(key_type, TypeVar):  # type: ignore
             return dict(data)
         serializer = self._serializer_factory.get_serializer(value_type)
         return dict((key_type(key), serializer.deserialize(value, value_type)) for key, value in data.items())
@@ -112,7 +122,39 @@ class DictSerializer(Serializer[Dict]):
         return self._deserialize_generic(data, type_)
 
 
+class DataClassSerializer(Serializer[DataClass]):
+    def _get_field_serializer(self, field: JsonField):
+        serializer_class = field.serializer_class
+        if serializer_class is None:
+            serializer_class = self._serializer_factory.get_serializer_class(field.type)
+        return self._serializer_factory.create_serializer(
+            serializer_class, *field.serializer_args, **field.serializer_kwargs
+        )
+
+    def serialize(self, data: DataClass) -> dict:
+        result = {}
+        for field in dataclass_fields(type(data)):
+            value = getattr(data, field.name)
+            if value is None and not is_optional(field.type):
+                value = field.default_value
+            serializer = self._get_field_serializer(field)
+            result[field.serialized_name] = serializer.serialize(value)
+        return result
+
+    def deserialize(self, data: dict, type_: Type[DataClass]) -> DataClass:
+        type_check(data, dict)
+        init_kwargs = {}
+        for field in dataclass_fields(type_):
+            value = data.get(field.serialized_name)
+            if value is None and not is_optional(field.type):
+                value = field.default_value
+            serializer = self._get_field_serializer(field)
+            init_kwargs[field.name] = serializer.deserialize(value, field.type)
+        return type_(**init_kwargs)
+
+
 SERIALIZERS: tuple = (
+    (DataClass, DataClassSerializer),
     (str, StringSerializer),
     (list, ListSerializer),
     (tuple, TupleSerializer),

@@ -1,4 +1,10 @@
-from typing import Any, Optional, Tuple, Type, Union
+from dataclasses import fields
+from typing import TYPE_CHECKING, Any, Generator, Optional, Tuple, Type, Union, get_type_hints
+
+from .typing import DataClass
+
+if TYPE_CHECKING:
+    from .field import JsonField  # noqa: F401
 
 
 def is_generic(type_: Type) -> bool:
@@ -41,3 +47,21 @@ def type_check(data: Any, type_: Type):
 
     if not isinstance(data, type_):
         raise WrongTypeError(type_, data)
+
+
+def set_forward_refs(dataclass: Type[DataClass], refs: dict):
+    dataclass.__forward_refs__ = refs
+
+
+def get_forward_refs(dataclass: Type[DataClass]):
+    return getattr(dataclass, "__forward_refs__", {})
+
+
+def dataclass_fields(dataclass: Type[DataClass]) -> Generator["JsonField", None, None]:
+    from .field import JsonField  # noqa: F811
+
+    forward_refs = get_forward_refs(dataclass)
+    type_hints = get_type_hints(dataclass, globalns=forward_refs)
+    for field in fields(dataclass):
+        json_field = JsonField(field, type_hints[field.name])
+        yield json_field
