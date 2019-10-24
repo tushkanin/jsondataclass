@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pytest
 
@@ -10,6 +10,7 @@ from jsondataclass.serializers import (
     DefaultSerializer,
     DictSerializer,
     ListSerializer,
+    OptionalSerializer,
     SerializerFactory,
     StringSerializer,
     TupleSerializer,
@@ -72,6 +73,11 @@ def test_serializer_factory_get_dataclass_serializer():
 
     factory = SerializerFactory()
     assert isinstance(factory.get_serializer(Data), DataClassSerializer)
+
+
+def test_serializer_factory_get_optional_serializer():
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(Optional[int]), OptionalSerializer)
 
 
 def test_string_serializer():
@@ -251,3 +257,12 @@ def test_dataclass_serializer_field_serializer():
     data_dict = {"foo": "1", "bar": "2"}
     data = Data(foo=1, bar="2")
     assert serializer.serialize(data) == data_dict
+
+
+def test_optional_serializer():
+    data = 1
+    serializer = OptionalSerializer()
+    assert serializer.deserialize(data, Optional[int]) == data
+    assert serializer.deserialize(None, Optional[int]) is None
+    assert serializer.serialize(data) == data
+    assert serializer.serialize(None) is None

@@ -9,6 +9,7 @@ from .utils import (
     dataclass_fields,
     extract_generic_args,
     extract_generic_origin,
+    extract_optional_type,
     is_generic,
     is_optional,
     is_subclass,
@@ -153,12 +154,28 @@ class DataClassSerializer(Serializer[DataClass]):
         return type_(**init_kwargs)
 
 
+class OptionalSerializer(Serializer[Optional[Type]]):
+    def serialize(self, data: Any) -> Any:
+        if data is None:
+            return None
+        serializer = self._serializer_factory.get_serializer(type(data))
+        return serializer.serialize(data)
+
+    def deserialize(self, data: Any, type_: Type[Optional[Type]]) -> Optional[Type]:
+        optional_type = extract_optional_type(type_)
+        if data is not None:
+            serializer = self._serializer_factory.get_serializer(optional_type)
+            return serializer.deserialize(data, optional_type)
+        return None
+
+
 SERIALIZERS: tuple = (
     (DataClass, DataClassSerializer),
     (str, StringSerializer),
     (list, ListSerializer),
     (tuple, TupleSerializer),
     (dict, DictSerializer),
+    (Optional, OptionalSerializer),
 )
 
 

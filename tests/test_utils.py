@@ -6,6 +6,7 @@ from jsondataclass.exceptions import WrongTypeError
 from jsondataclass.utils import (
     extract_generic_args,
     extract_generic_origin,
+    extract_optional_type,
     is_generic,
     is_optional,
     is_subclass,
@@ -38,8 +39,18 @@ def test_extract_generic_args():
     assert extract_generic_args(List[int]) == (int,)
 
 
+def test_extract_generic_args_fail():
+    with pytest.raises(TypeError):
+        extract_generic_args(int)
+
+
 def test_extract_generic_origin():
     assert extract_generic_origin(List[int]) is list
+
+
+def test_extract_generic_origin_fail():
+    with pytest.raises(TypeError):
+        extract_generic_origin(int)
 
 
 def test_type_check():
@@ -49,3 +60,12 @@ def test_type_check():
 def test_type_check_fail():
     with pytest.raises(WrongTypeError):
         type_check(1, str)
+
+
+def test_extract_optional_type():
+    assert extract_optional_type(Optional[int]) is int
+
+
+def test_extract_optional_type_fail():
+    with pytest.raises(TypeError):
+        extract_optional_type(int)

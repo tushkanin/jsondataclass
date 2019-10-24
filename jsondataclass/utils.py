@@ -65,3 +65,9 @@ def dataclass_fields(dataclass: Type[DataClass]) -> Generator["JsonField", None,
     for field in fields(dataclass):
         json_field = JsonField(field, type_hints[field.name])
         yield json_field
+
+
+def extract_optional_type(type_: Type[Optional[Type]]) -> Type:
+    if not is_optional(type_):
+        raise TypeError(f"{type_} is not Optional")
+    return extract_generic_args(type_)[0]
