@@ -33,3 +33,12 @@ class TupleTypeMatchError(JsonDataClassError):
     def __str__(self) -> str:
         expected_length = len(extract_generic_args(self._tuple_type))
         return f"Expected list with length: {expected_length}, but received: {len(self._value)}"
+
+
+class UnionTypeMatchError(JsonDataClassError):
+    def __init__(self, union: Type, value: Any):
+        self._union = union
+        self._value = value
+
+    def __str__(self) -> str:
+        return f"{type(self._value)} does not match any type of {self._union!r}"

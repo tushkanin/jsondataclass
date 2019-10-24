@@ -7,6 +7,7 @@ from jsondataclass.utils import (
     extract_generic_args,
     extract_generic_origin,
     extract_optional_type,
+    extract_union_types,
     is_generic,
     is_optional,
     is_subclass,
@@ -69,3 +70,12 @@ def test_extract_optional_type():
 def test_extract_optional_type_fail():
     with pytest.raises(TypeError):
         extract_optional_type(int)
+
+
+def test_extract_union_types():
+    assert extract_union_types(Union[int, str]) == (int, str)
+
+
+def test_extract_union_types_fail():
+    with pytest.raises(TypeError):
+        extract_union_types(int)

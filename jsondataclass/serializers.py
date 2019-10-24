@@ -1,8 +1,8 @@
 from abc import abstractmethod
-from typing import Any, Collection, Dict, Generic, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Collection, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
 from .config import Config
-from .exceptions import TupleTypeMatchError
+from .exceptions import JsonDataClassError, TupleTypeMatchError, UnionTypeMatchError
 from .field import JsonField
 from .typing import DataClass
 from .utils import (
@@ -10,6 +10,7 @@ from .utils import (
     extract_generic_args,
     extract_generic_origin,
     extract_optional_type,
+    extract_union_types,
     is_generic,
     is_optional,
     is_subclass,
@@ -169,6 +170,28 @@ class OptionalSerializer(Serializer[Optional[Type]]):
         return None
 
 
+class UnionSerializer(Serializer[Union[Type]]):
+    def serialize(self, data: Any) -> Any:
+        serializer = self._serializer_factory.get_serializer(type(data))
+        return serializer.serialize(data)
+
+    def deserialize(self, data: Any, type_: Type[Union[Type]]) -> Union[Type]:
+        union_types = extract_union_types(type_)
+        if type(data) in union_types:
+            union_type = type(data)
+            serializer = self._serializer_factory.get_serializer(union_type)
+            return serializer.deserialize(data, union_type)
+        for union_type in union_types:
+            try:
+                serializer = self._serializer_factory.get_serializer(union_type)
+                value = serializer.deserialize(data, union_type)
+                if isinstance(value, union_type):
+                    return value
+            except (TypeError, ValueError, JsonDataClassError):
+                pass
+        raise UnionTypeMatchError(type_, data)
+
+
 SERIALIZERS: tuple = (
     (DataClass, DataClassSerializer),
     (str, StringSerializer),
@@ -176,6 +199,7 @@ SERIALIZERS: tuple = (
     (tuple, TupleSerializer),
     (dict, DictSerializer),
     (Optional, OptionalSerializer),
+    (Union, UnionSerializer),
 )
 
 

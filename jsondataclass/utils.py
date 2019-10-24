@@ -71,3 +71,9 @@ def extract_optional_type(type_: Type[Optional[Type]]) -> Type:
     if not is_optional(type_):
         raise TypeError(f"{type_} is not Optional")
     return extract_generic_args(type_)[0]
+
+
+def extract_union_types(type_: Type[Union[Type]]) -> Tuple[Type, ...]:
+    if not is_union(type_):
+        raise TypeError(f"{type_} is not Union")
+    return extract_generic_args(type_)

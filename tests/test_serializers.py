@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import pytest
 
-from jsondataclass.exceptions import MissingDefaultValueError, WrongTypeError
+from jsondataclass.exceptions import MissingDefaultValueError, UnionTypeMatchError, WrongTypeError
 from jsondataclass.field import jsonfield
 from jsondataclass.serializers import (
     DataClassSerializer,
@@ -14,6 +14,7 @@ from jsondataclass.serializers import (
     SerializerFactory,
     StringSerializer,
     TupleSerializer,
+    UnionSerializer,
 )
 from jsondataclass.utils import set_forward_refs
 
@@ -78,6 +79,11 @@ def test_serializer_factory_get_dataclass_serializer():
 def test_serializer_factory_get_optional_serializer():
     factory = SerializerFactory()
     assert isinstance(factory.get_serializer(Optional[int]), OptionalSerializer)
+
+
+def test_serializer_factory_get_union_serializer():
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(Union[int, str]), UnionSerializer)
 
 
 def test_string_serializer():
@@ -266,3 +272,17 @@ def test_optional_serializer():
     assert serializer.deserialize(None, Optional[int]) is None
     assert serializer.serialize(data) == data
     assert serializer.serialize(None) is None
+
+
+def test_union_serializer():
+    data = [1, 2, 3]
+    serializer = UnionSerializer()
+    assert serializer.deserialize(data, Union[dict, list]) == data
+    assert serializer.serialize(data) == data
+
+
+def test_union_serializer_type_missmatch():
+    data = 1
+    serializer = UnionSerializer()
+    with pytest.raises(UnionTypeMatchError):
+        serializer.deserialize(data, Union[dict, list]) == data
