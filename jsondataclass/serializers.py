@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Collection, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
 from .config import Config
@@ -193,6 +193,18 @@ class UnionSerializer(Serializer[Union[Type]]):
         raise UnionTypeMatchError(type_, data)
 
 
+def _serialize_datetime(data: Union[datetime, date], format: Optional[str]) -> str:
+    if format is None:
+        return data.isoformat()
+    return data.strftime(format)
+
+
+def _deserialize_datetime(data: str, format: Optional[str]) -> datetime:
+    if format is None:
+        return datetime.fromisoformat(data)
+    return datetime.strptime(data, format)
+
+
 class DateTimeSerializerBase(Serializer[T]):
     _config_format_attr = NotImplemented
 
@@ -203,18 +215,24 @@ class DateTimeSerializerBase(Serializer[T]):
         self._format: Optional[str] = format if format is not None else getattr(self._config, self._config_format_attr)
 
 
-class DateTimeSerializer(DateTimeSerializerBase[datetime]):
+class DateTimeSerializer(DateTimeSerializerBase):
     _config_format_attr = "datetime_format"
 
     def serialize(self, data: datetime) -> str:
-        if self._format is None:
-            return data.isoformat()
-        return data.strftime(self._format)
+        return _serialize_datetime(data, self._format)
 
     def deserialize(self, data: str, type_: Type[datetime]) -> datetime:
-        if self._format is None:
-            return datetime.fromisoformat(data)
-        return datetime.strptime(data, self._format)
+        return _deserialize_datetime(data, self._format)
+
+
+class DateSerializer(DateTimeSerializerBase):
+    _config_format_attr = "date_format"
+
+    def serialize(self, data: date) -> str:
+        return _serialize_datetime(data, self._format)
+
+    def deserialize(self, data: str, type_: Type[date]) -> date:
+        return _deserialize_datetime(data, self._format).date()
 
 
 SERIALIZERS: tuple = (
@@ -226,6 +244,7 @@ SERIALIZERS: tuple = (
     (Optional, OptionalSerializer),
     (Union, UnionSerializer),
     (datetime, DateTimeSerializer),
+    (date, DateSerializer),
 )
 
 

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Union
 
 import pytest
@@ -8,6 +8,7 @@ from jsondataclass.exceptions import MissingDefaultValueError, UnionTypeMatchErr
 from jsondataclass.field import jsonfield
 from jsondataclass.serializers import (
     DataClassSerializer,
+    DateSerializer,
     DateTimeSerializer,
     DefaultSerializer,
     DictSerializer,
@@ -91,6 +92,11 @@ def test_serializer_factory_get_union_serializer():
 def test_serializer_factory_get_datetime_serializer():
     factory = SerializerFactory()
     assert isinstance(factory.get_serializer(datetime), DateTimeSerializer)
+
+
+def test_serializer_factory_get_date_serializer():
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(date), DateSerializer)
 
 
 def test_string_serializer():
@@ -317,3 +323,19 @@ def test_datetime_serializer_format():
     serializer = DateTimeSerializer(format="%m/%d/%y %H:%M:%S")
     assert serializer.deserialize(data, datetime) == date
     assert serializer.serialize(date) == data
+
+
+def test_date_serializer():
+    data = "2000-01-01"
+    date_ = datetime(2000, 1, 1).date()
+    serializer = DateSerializer()
+    assert serializer.deserialize(data, date) == date_
+    assert serializer.serialize(date_) == data
+
+
+def test_date_serializer_format():
+    data = "01/01/00"
+    date_ = datetime(2000, 1, 1).date()
+    serializer = DateSerializer(format="%m/%d/%y")
+    assert serializer.deserialize(data, date) == date_
+    assert serializer.serialize(date_) == data
