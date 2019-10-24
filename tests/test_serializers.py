@@ -17,6 +17,7 @@ from jsondataclass.serializers import (
     SerializerFactory,
     StringSerializer,
     TimeSerializer,
+    TimestampSerializer,
     TupleSerializer,
     UnionSerializer,
 )
@@ -103,6 +104,11 @@ def test_serializer_factory_get_date_serializer():
 def test_serializer_factory_get_time_serializer():
     factory = SerializerFactory()
     assert isinstance(factory.get_serializer(time), TimeSerializer)
+
+
+def test_serializer_factory_get_timestamp_serializer():
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(datetime.timestamp), TimestampSerializer)
 
 
 def test_string_serializer():
@@ -361,3 +367,19 @@ def test_time_serializer_format():
     serializer = TimeSerializer(format="%I:%M %p")
     assert serializer.deserialize(data, time) == time_
     assert serializer.serialize(time_) == data
+
+
+def test_timestamp_serializer():
+    timestamp = 946720800
+    date = datetime(2000, 1, 1, 12, 0, 0)
+    serializer = TimestampSerializer()
+    assert serializer.deserialize(timestamp, datetime) == date
+    assert serializer.serialize(date) == timestamp
+
+
+def test_timestamp_serializer_timezone():
+    timestamp = 946728000
+    date = datetime(2000, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    serializer = TimestampSerializer(timezone=timezone.utc)
+    assert serializer.deserialize(timestamp, datetime) == date
+    assert serializer.serialize(date) == timestamp

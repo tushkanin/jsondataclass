@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timezone
 from typing import Any, Collection, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
 from .config import Config
@@ -245,6 +245,23 @@ class TimeSerializer(DateTimeSerializerBase[time]):
         return datetime.strptime(data, self._format).time()
 
 
+class TimestampSerializer(Serializer[datetime]):
+    def __init__(
+        self,
+        serializer_factory: "SerializerFactory" = None,
+        config: Config = None,
+        timezone: Optional[timezone] = None,
+    ):
+        super().__init__(serializer_factory, config)
+        self._timezone = timezone
+
+    def serialize(self, data: datetime) -> int:
+        return int(data.timestamp())
+
+    def deserialize(self, data: int, type_: Type[datetime]) -> datetime:
+        return datetime.fromtimestamp(data, tz=self._timezone)
+
+
 SERIALIZERS: tuple = (
     (DataClass, DataClassSerializer),
     (str, StringSerializer),
@@ -256,6 +273,7 @@ SERIALIZERS: tuple = (
     (datetime, DateTimeSerializer),
     (date, DateSerializer),
     (time, TimeSerializer),
+    (datetime.timestamp, TimestampSerializer),
 )
 
 
