@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Union
 
 import pytest
@@ -16,6 +16,7 @@ from jsondataclass.serializers import (
     OptionalSerializer,
     SerializerFactory,
     StringSerializer,
+    TimeSerializer,
     TupleSerializer,
     UnionSerializer,
 )
@@ -97,6 +98,11 @@ def test_serializer_factory_get_datetime_serializer():
 def test_serializer_factory_get_date_serializer():
     factory = SerializerFactory()
     assert isinstance(factory.get_serializer(date), DateSerializer)
+
+
+def test_serializer_factory_get_time_serializer():
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(time), TimeSerializer)
 
 
 def test_string_serializer():
@@ -339,3 +345,19 @@ def test_date_serializer_format():
     serializer = DateSerializer(format="%m/%d/%y")
     assert serializer.deserialize(data, date) == date_
     assert serializer.serialize(date_) == data
+
+
+def test_time_serializer():
+    data = "12:00:00"
+    time_ = datetime(2000, 1, 1, 12, 0, 0).time()
+    serializer = TimeSerializer()
+    assert serializer.deserialize(data, time) == time_
+    assert serializer.serialize(time_) == data
+
+
+def test_time_serializer_format():
+    data = "12:00 PM"
+    time_ = datetime(2000, 1, 1, 12, 0, 0).time()
+    serializer = TimeSerializer(format="%I:%M %p")
+    assert serializer.deserialize(data, time) == time_
+    assert serializer.serialize(time_) == data

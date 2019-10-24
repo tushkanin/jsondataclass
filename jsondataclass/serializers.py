@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Any, Collection, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
 from .config import Config
@@ -193,16 +193,10 @@ class UnionSerializer(Serializer[Union[Type]]):
         raise UnionTypeMatchError(type_, data)
 
 
-def _serialize_datetime(data: Union[datetime, date], format: Optional[str]) -> str:
+def _serialize_datetime(data: Union[datetime, date, time], format: Optional[str]) -> str:
     if format is None:
         return data.isoformat()
     return data.strftime(format)
-
-
-def _deserialize_datetime(data: str, format: Optional[str]) -> datetime:
-    if format is None:
-        return datetime.fromisoformat(data)
-    return datetime.strptime(data, format)
 
 
 class DateTimeSerializerBase(Serializer[T]):
@@ -215,24 +209,40 @@ class DateTimeSerializerBase(Serializer[T]):
         self._format: Optional[str] = format if format is not None else getattr(self._config, self._config_format_attr)
 
 
-class DateTimeSerializer(DateTimeSerializerBase):
+class DateTimeSerializer(DateTimeSerializerBase[datetime]):
     _config_format_attr = "datetime_format"
 
     def serialize(self, data: datetime) -> str:
         return _serialize_datetime(data, self._format)
 
     def deserialize(self, data: str, type_: Type[datetime]) -> datetime:
-        return _deserialize_datetime(data, self._format)
+        if self._format is None:
+            return datetime.fromisoformat(data)
+        return datetime.strptime(data, self._format)
 
 
-class DateSerializer(DateTimeSerializerBase):
+class DateSerializer(DateTimeSerializerBase[date]):
     _config_format_attr = "date_format"
 
     def serialize(self, data: date) -> str:
         return _serialize_datetime(data, self._format)
 
     def deserialize(self, data: str, type_: Type[date]) -> date:
-        return _deserialize_datetime(data, self._format).date()
+        if self._format is None:
+            return date.fromisoformat(data)
+        return datetime.strptime(data, self._format).date()
+
+
+class TimeSerializer(DateTimeSerializerBase[time]):
+    _config_format_attr = "time_format"
+
+    def serialize(self, data: time) -> str:
+        return _serialize_datetime(data, self._format)
+
+    def deserialize(self, data: str, type_: Type[time]) -> time:
+        if self._format is None:
+            return time.fromisoformat(data)
+        return datetime.strptime(data, self._format).time()
 
 
 SERIALIZERS: tuple = (
@@ -245,6 +255,7 @@ SERIALIZERS: tuple = (
     (Union, UnionSerializer),
     (datetime, DateTimeSerializer),
     (date, DateSerializer),
+    (time, TimeSerializer),
 )
 
 

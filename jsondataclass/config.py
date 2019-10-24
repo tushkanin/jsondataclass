@@ -16,3 +16,4 @@ class Config:
     default_serializer_class: "Serializer" = field(default_factory=_default_serializer)
     datetime_format: Optional[str] = None
     date_format: Optional[str] = None
+    time_format: Optional[str] = None
