@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from datetime import datetime
 from typing import Any, Collection, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
 from .config import Config
@@ -192,6 +193,30 @@ class UnionSerializer(Serializer[Union[Type]]):
         raise UnionTypeMatchError(type_, data)
 
 
+class DateTimeSerializerBase(Serializer[T]):
+    _config_format_attr = NotImplemented
+
+    def __init__(
+        self, serializer_factory: "SerializerFactory" = None, config: Config = None, format: Optional[str] = None
+    ):
+        super().__init__(serializer_factory, config)
+        self._format: Optional[str] = format if format is not None else getattr(self._config, self._config_format_attr)
+
+
+class DateTimeSerializer(DateTimeSerializerBase[datetime]):
+    _config_format_attr = "datetime_format"
+
+    def serialize(self, data: datetime) -> str:
+        if self._format is None:
+            return data.isoformat()
+        return data.strftime(self._format)
+
+    def deserialize(self, data: str, type_: Type[datetime]) -> datetime:
+        if self._format is None:
+            return datetime.fromisoformat(data)
+        return datetime.strptime(data, self._format)
+
+
 SERIALIZERS: tuple = (
     (DataClass, DataClassSerializer),
     (str, StringSerializer),
@@ -200,6 +225,7 @@ SERIALIZERS: tuple = (
     (dict, DictSerializer),
     (Optional, OptionalSerializer),
     (Union, UnionSerializer),
+    (datetime, DateTimeSerializer),
 )
 
 

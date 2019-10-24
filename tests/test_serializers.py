@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple, Union
 
 import pytest
@@ -7,6 +8,7 @@ from jsondataclass.exceptions import MissingDefaultValueError, UnionTypeMatchErr
 from jsondataclass.field import jsonfield
 from jsondataclass.serializers import (
     DataClassSerializer,
+    DateTimeSerializer,
     DefaultSerializer,
     DictSerializer,
     ListSerializer,
@@ -84,6 +86,11 @@ def test_serializer_factory_get_optional_serializer():
 def test_serializer_factory_get_union_serializer():
     factory = SerializerFactory()
     assert isinstance(factory.get_serializer(Union[int, str]), UnionSerializer)
+
+
+def test_serializer_factory_get_datetime_serializer():
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(datetime), DateTimeSerializer)
 
 
 def test_string_serializer():
@@ -286,3 +293,27 @@ def test_union_serializer_type_missmatch():
     serializer = UnionSerializer()
     with pytest.raises(UnionTypeMatchError):
         serializer.deserialize(data, Union[dict, list]) == data
+
+
+def test_datetime_serializer_naive_datetime():
+    data = "2000-01-01T12:00:00"
+    date = datetime(2000, 1, 1, 12, 0, 0)
+    serializer = DateTimeSerializer()
+    assert serializer.deserialize(data, datetime) == date
+    assert serializer.serialize(date) == data
+
+
+def test_datetime_serializer_aware_datetime():
+    data = "2000-01-01T12:00:00+02:00"
+    date = datetime(2000, 1, 1, 12, 0, tzinfo=timezone(timedelta(seconds=7200)))
+    serializer = DateTimeSerializer()
+    assert serializer.deserialize(data, datetime) == date
+    assert serializer.serialize(date) == data
+
+
+def test_datetime_serializer_format():
+    data = "01/01/00 12:00:00"
+    date = datetime(2000, 1, 1, 12, 0)
+    serializer = DateTimeSerializer(format="%m/%d/%y %H:%M:%S")
+    assert serializer.deserialize(data, datetime) == date
+    assert serializer.serialize(date) == data

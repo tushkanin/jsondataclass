@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from .serializers import Serializer  # noqa: F401
@@ -14,3 +14,4 @@ def _default_serializer():
 @dataclass
 class Config:
     default_serializer_class: "Serializer" = field(default_factory=_default_serializer)
+    datetime_format: Optional[str] = None
