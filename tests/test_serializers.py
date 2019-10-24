@@ -370,11 +370,11 @@ def test_time_serializer_format():
 
 
 def test_timestamp_serializer():
-    timestamp = 946720800
-    date = datetime(2000, 1, 1, 12, 0, 0)
+    now = datetime.now().replace(microsecond=0)
+    timestamp_ = int(now.timestamp())
     serializer = TimestampSerializer()
-    assert serializer.deserialize(timestamp, datetime) == date
-    assert serializer.serialize(date) == timestamp
+    assert serializer.deserialize(timestamp_, datetime) == now
+    assert serializer.serialize(now) == timestamp_
 
 
 def test_timestamp_serializer_timezone():
