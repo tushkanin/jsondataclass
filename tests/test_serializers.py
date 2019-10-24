@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
+from enum import Enum
 from typing import Dict, List, Optional, Tuple, Union
 
 import pytest
@@ -12,6 +13,7 @@ from jsondataclass.serializers import (
     DateTimeSerializer,
     DefaultSerializer,
     DictSerializer,
+    EnumSerializer,
     ListSerializer,
     OptionalSerializer,
     SerializerFactory,
@@ -109,6 +111,16 @@ def test_serializer_factory_get_time_serializer():
 def test_serializer_factory_get_timestamp_serializer():
     factory = SerializerFactory()
     assert isinstance(factory.get_serializer(datetime.timestamp), TimestampSerializer)
+
+
+def test_serializer_factory_get_enum_serializer():
+    class Foo(Enum):
+        A = 1
+        B = 2
+
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(Enum), EnumSerializer)
+    assert isinstance(factory.get_serializer(Foo), EnumSerializer)
 
 
 def test_string_serializer():
@@ -383,3 +395,14 @@ def test_timestamp_serializer_timezone():
     serializer = TimestampSerializer(timezone=timezone.utc)
     assert serializer.deserialize(timestamp, datetime) == date
     assert serializer.serialize(date) == timestamp
+
+
+def test_enum_serializer():
+    class Foo(Enum):
+        A = 1
+        B = 2
+
+    data = 1
+    serializer = EnumSerializer()
+    assert serializer.deserialize(data, Foo) == Foo.A
+    assert serializer.serialize(Foo.A) == data

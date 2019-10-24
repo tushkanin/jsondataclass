@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from datetime import date, datetime, time, timezone
+from enum import Enum
 from typing import Any, Collection, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
 from .config import Config
@@ -262,6 +263,14 @@ class TimestampSerializer(Serializer[datetime]):
         return datetime.fromtimestamp(data, tz=self._timezone)
 
 
+class EnumSerializer(Serializer[Enum]):
+    def serialize(self, data: Enum) -> Any:
+        return data.value
+
+    def deserialize(self, data: Any, type_: Type[Enum]) -> Enum:
+        return type_(data)
+
+
 SERIALIZERS: tuple = (
     (DataClass, DataClassSerializer),
     (str, StringSerializer),
@@ -274,6 +283,7 @@ SERIALIZERS: tuple = (
     (date, DateSerializer),
     (time, TimeSerializer),
     (datetime.timestamp, TimestampSerializer),
+    (Enum, EnumSerializer),
 )
 
 
