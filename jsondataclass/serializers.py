@@ -292,7 +292,7 @@ class SerializerFactory:
         self._serializers: Dict[Type, Type[Serializer]] = dict(SERIALIZERS)
         if config is None:
             config = Config()
-        self._config = Config()
+        self._config = config
 
     def register(self, type_: Type, serializer_class: Type[Serializer]):
         self._serializers[type_] = serializer_class
@@ -314,7 +314,7 @@ class SerializerFactory:
             if is_subclass(type_, t):
                 return serializer_class
         if self._config.default_serializer_class is not None:
-            self._config.default_serializer_class
+            return self._config.default_serializer_class
         return DefaultSerializer
 
     def get_serializer(self, type_: Type) -> Serializer:
