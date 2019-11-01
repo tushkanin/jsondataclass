@@ -31,9 +31,9 @@ setup(
     setup_requires=setup_requirements,
     license="MIT license",
     zip_safe=False,
-    keywords="jsondataclass",
+    keywords="jsondataclass dataclasses json",
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
