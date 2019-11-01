@@ -7,4 +7,4 @@ __all__ = ["DataClassMapper", "from_json", "from_dict", "to_json", "to_dict", "j
 
 __author__ = """Aleksey Shulga"""
 __email__ = "oleksii.shulga@gmail.com"
-__version__ = "__version__ = '0.1.0'"
+__version__ = "0.2.0"
