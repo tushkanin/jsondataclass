@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
+from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -11,6 +12,7 @@ from jsondataclass.serializers import (
     DataClassSerializer,
     DateSerializer,
     DateTimeSerializer,
+    DecimalSerializer,
     DefaultSerializer,
     DictSerializer,
     EnumSerializer,
@@ -121,6 +123,11 @@ def test_serializer_factory_get_enum_serializer():
     factory = SerializerFactory()
     assert isinstance(factory.get_serializer(Enum), EnumSerializer)
     assert isinstance(factory.get_serializer(Foo), EnumSerializer)
+
+
+def test_serializer_factory_get_decimal_serializer():
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(Decimal), DecimalSerializer)
 
 
 def test_string_serializer():
@@ -406,3 +413,11 @@ def test_enum_serializer():
     serializer = EnumSerializer()
     assert serializer.deserialize(data, Foo) == Foo.A
     assert serializer.serialize(Foo.A) == data
+
+
+def test_decimal_serializer():
+    data = "100.55"
+    dec = Decimal("100.55")
+    serializer = DecimalSerializer()
+    assert serializer.deserialize(data, Decimal) == dec
+    assert serializer.serialize(dec) == data

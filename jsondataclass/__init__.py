@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from .mapper import DataClassMapper, from_dict, from_json, to_dict, to_json
 from .field import jsonfield
+from .mapper import DataClassMapper, from_dict, from_json, to_dict, to_json
 
 __all__ = ["DataClassMapper", "from_json", "from_dict", "to_json", "to_dict", "jsonfield"]
 

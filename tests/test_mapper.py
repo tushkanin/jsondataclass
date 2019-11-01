@@ -2,6 +2,7 @@ import json
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from datetime import date, datetime, time
+from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -59,6 +60,24 @@ class TestMappingDataClassWithInt(BaseTestMapping):
     @property
     def json_string(self):
         return '{"foo": 1}'
+
+
+class TestMappingDataClassWithDecimal(BaseTestMapping):
+    @dataclass
+    class Data:
+        foo: Decimal
+
+    @property
+    def dataclass_type(self):
+        return self.Data
+
+    @property
+    def dataclass_obj(self):
+        return self.dataclass_type(foo=Decimal("11.22"))
+
+    @property
+    def json_string(self):
+        return '{"foo": "11.22"}'
 
 
 class TestMappingDataClassWithStr(BaseTestMapping):
