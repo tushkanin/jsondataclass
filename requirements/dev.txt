@@ -1,0 +1,9 @@
+-r test.txt
+pip==9.0.1
+bump2version==0.5.11
+wheel==0.33.6
+flake8==3.7.8
+black==19.3b0
+isort==4.3.21
+mypy==0.730
+twine==1.14.0
