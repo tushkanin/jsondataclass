@@ -366,6 +366,7 @@ Decimal
 Decimal type can be decerialized from integer, float or string, but is serialized always to string.
 
 .. code-block:: python
+
     from dataclasses import dataclass
     from decimal import Decimal
     from jsondataclass import from_json, to_json
