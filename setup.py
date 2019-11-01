@@ -21,7 +21,7 @@ setup(
     description="Json dataclass mapper",
     long_description=readme + "\n\n" + history,
     author="Aleksey Shulga",
-    author_email="tushkanin@protonmail.com",
+    author_email="oleksii.shulga@gmail.com",
     url="https://github.com/tushkanin/jsondataclass",
     packages=["jsondataclass"],
     package_dir={"jsondataclass": "jsondataclass"},
