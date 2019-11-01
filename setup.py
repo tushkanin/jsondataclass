@@ -17,7 +17,7 @@ test_requirements = ["pytest>=3"]
 
 setup(
     name="jsondataclass",
-    version="0.1.0",
+    version="0.2.0",
     description="Json dataclass mapper",
     long_description=readme + "\n\n" + history,
     author="Aleksey Shulga",
@@ -31,9 +31,9 @@ setup(
     setup_requires=setup_requirements,
     license="MIT license",
     zip_safe=False,
-    keywords="jsondataclass",
+    keywords="jsondataclass dataclasses json",
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",

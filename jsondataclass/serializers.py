@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from datetime import date, datetime, time, timezone
+from decimal import Decimal
 from enum import Enum
 from typing import Any, Collection, Dict, Generic, List, Optional, Tuple, Type, TypeVar, Union
 
@@ -271,6 +272,14 @@ class EnumSerializer(Serializer[Enum]):
         return type_(data)
 
 
+class DecimalSerializer(Serializer[Decimal]):
+    def serialize(self, data: Decimal) -> str:
+        return str(data)
+
+    def deserialize(self, data: str, type_: Type[Decimal]) -> Decimal:
+        return Decimal(data)
+
+
 SERIALIZERS: tuple = (
     (DataClass, DataClassSerializer),
     (str, StringSerializer),
@@ -284,6 +293,7 @@ SERIALIZERS: tuple = (
     (time, TimeSerializer),
     (datetime.timestamp, TimestampSerializer),
     (Enum, EnumSerializer),
+    (Decimal, DecimalSerializer),
 )
 
 
