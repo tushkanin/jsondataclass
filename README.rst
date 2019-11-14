@@ -72,6 +72,8 @@ Supported types
 
 * typing.Union
 
+* typing.Literal (python >= 3.8 required)
+
 * datetime.datetime
 
 * datetime.date
@@ -326,6 +328,32 @@ Generic collections
     movie = from_json(json_str, Movie)
     print(movie)
     # Movie(genres=['comedy', 'crime'], rating=(5.6, 100), name={'en': 'WALL-E', 'de': 'WALL-E'})
+
+Literals
+========
+
+.. code-block:: python
+
+    from dataclasses import dataclass
+    from typing import Literal
+
+    from jsondataclass import from_json, to_json
+
+
+    @dataclass
+    class Movie:
+        name: str
+        year: int
+        rating: Literal[1, 2, 3, 4, 5]
+
+
+    movie = Movie("Terminator: Dark Fate", 2019, 5)
+    print(to_json(movie))
+    # > {"name": "Terminator: Dark Fate", "year": 2019, "rating": 5}
+
+    json_str = '{"name": "Terminator: Dark Fate", "year": 2019, "rating": 5}'
+    print(from_json(json_str, Movie))
+    # > Movie(name='Terminator: Dark Fate', year=2019, rating=5)
 
 Enums
 =====
