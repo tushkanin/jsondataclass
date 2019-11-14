@@ -17,7 +17,7 @@ test_requirements = ["pytest>=3"]
 
 setup(
     name="jsondataclass",
-    version="0.2.1",
+    version="0.3.0",
     description="Json dataclass mapper",
     long_description=readme + "\n\n" + history,
     author="Aleksey Shulga",
