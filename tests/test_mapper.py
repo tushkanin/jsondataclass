@@ -1,10 +1,13 @@
 import json
+import sys
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from decimal import Decimal
 from enum import Enum
 from typing import Dict, List, Optional, Tuple, Union
+
+import pytest
 
 from jsondataclass.mapper import DataClassMapper, from_dict, from_json, to_dict, to_json
 from jsondataclass.serializers import StringSerializer
@@ -114,6 +117,31 @@ class TestMappingDataClassWithBool(BaseTestMapping):
     @property
     def json_string(self):
         return '{"foo": true}'
+
+
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
+class TestMappingDataClassWithLiteral(BaseTestMapping):
+    @property
+    def dataclass_type(self):
+        from typing import Literal
+
+        if hasattr(self, "dataclass"):
+            return self.dataclass
+
+        @dataclass
+        class Data:
+            foo: Literal[1]
+
+        self.dataclass = Data
+        return Data
+
+    @property
+    def dataclass_obj(self):
+        return self.dataclass_type(foo=1)
+
+    @property
+    def json_string(self):
+        return '{"foo": 1}'
 
 
 class TestMappingDataClassWithFloat(BaseTestMapping):

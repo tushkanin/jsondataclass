@@ -1,3 +1,4 @@
+import sys
 from typing import Collection, Dict, List, Mapping, Optional, Union
 
 import pytest
@@ -79,3 +80,24 @@ def test_extract_union_types():
 def test_extract_union_types_fail():
     with pytest.raises(TypeError):
         extract_union_types(int)
+
+
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
+def test_is_literal():
+    from typing import Literal
+
+    from jsondataclass.utils import is_literal
+
+    assert is_literal(Literal[True]) is True
+    assert is_literal(Literal[True, 1]) is True
+    assert is_literal(int) is False
+
+
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
+def test_extract_literal_values():
+    from typing import Literal
+
+    from jsondataclass.utils import extract_literal_values
+
+    assert extract_literal_values(Literal[True]) == (True,)
+    assert extract_literal_values(Literal[1, 2, 3]) == (1, 2, 3)
