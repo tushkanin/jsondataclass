@@ -18,11 +18,11 @@ deploy:
       R2x6ZEtJU0ZsY2w2cVdMakVRc0NrMkwvUzUxUjc3WVhLSzRDTzJINEtzelR2RkVzL1JHeFZEOE02
       RENZZk8xd0hsK3FsL2pwaEVDQ1JJb3g4eHkrZzZBVWNWOXo5ZVZVZnQ5RTZ6aG9HU293L1VWYWM9
   true:
-    condition: $TOXENV == py37
+    condition: $TOXENV == py38
     repo: tushkanin/jsondataclass
     tags: true
 env:
-- TOXENV=py37
+- TOXENV=py37, py38
 install: pip install -U tox
 language: python
 python: 3.7

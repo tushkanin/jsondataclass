@@ -1,3 +1,4 @@
+import sys
 from dataclasses import fields
 from typing import TYPE_CHECKING, Any, Generator, Optional, Tuple, Type, Union, get_type_hints
 
@@ -77,3 +78,15 @@ def extract_union_types(type_: Type[Union[Type]]) -> Tuple[Type, ...]:
     if not is_union(type_):
         raise TypeError(f"{type_} is not Union")
     return extract_generic_args(type_)
+
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+
+    def is_literal(type_: Type):
+        return is_generic(type_) and type_.__origin__ is Literal
+
+    def extract_literal_values(type_: Type) -> Tuple[Any, ...]:
+        if not is_literal(type_):
+            raise TypeError(f"{type_} is not Literal")
+        return extract_generic_args(type_)

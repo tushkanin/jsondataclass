@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 from decimal import Decimal
@@ -128,6 +129,16 @@ def test_serializer_factory_get_enum_serializer():
 def test_serializer_factory_get_decimal_serializer():
     factory = SerializerFactory()
     assert isinstance(factory.get_serializer(Decimal), DecimalSerializer)
+
+
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
+def test_serializer_factory_get_literal_serializer():
+    from typing import Literal
+
+    from jsondataclass.serializers import LiteralSerializer
+
+    factory = SerializerFactory()
+    assert isinstance(factory.get_serializer(Literal[True]), LiteralSerializer)
 
 
 def test_string_serializer():
@@ -421,3 +432,27 @@ def test_decimal_serializer():
     serializer = DecimalSerializer()
     assert serializer.deserialize(data, Decimal) == dec
     assert serializer.serialize(dec) == data
+
+
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
+def test_literal_serializer():
+    from typing import Literal
+
+    from jsondataclass.serializers import LiteralSerializer
+
+    seializer = LiteralSerializer()
+    assert seializer.deserialize(1, Literal[1]) == 1
+    assert seializer.deserialize(1, Literal[1, 2]) == 1
+    assert seializer.serialize(1) == 1
+
+
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
+def test_literal_serializer_fail():
+    from typing import Literal
+
+    from jsondataclass.serializers import LiteralSerializer
+    from jsondataclass.exceptions import LiteralTypeMatchError
+
+    seializer = LiteralSerializer()
+    with pytest.raises(LiteralTypeMatchError):
+        seializer.deserialize(5, Literal[1, 2, 3])

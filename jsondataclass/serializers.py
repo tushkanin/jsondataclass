@@ -1,3 +1,4 @@
+import sys
 from abc import abstractmethod
 from datetime import date, datetime, time, timezone
 from decimal import Decimal
@@ -295,6 +296,23 @@ SERIALIZERS: tuple = (
     (Enum, EnumSerializer),
     (Decimal, DecimalSerializer),
 )
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+    from .utils import extract_literal_values
+    from .exceptions import LiteralTypeMatchError
+
+    class LiteralSerializer(Serializer):
+        def serialize(self, data: Any) -> Any:
+            return data
+
+        def deserialize(self, data: Any, type_: Type) -> Any:
+            literal_values = extract_literal_values(type_)
+            if data not in literal_values:
+                raise LiteralTypeMatchError(type_, data)
+            return data
+
+    SERIALIZERS += ((Literal, LiteralSerializer),)
 
 
 class SerializerFactory:

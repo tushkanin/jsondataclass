@@ -1,3 +1,4 @@
+import sys
 from dataclasses import Field
 from typing import Any, Type
 
@@ -42,3 +43,14 @@ class UnionTypeMatchError(JsonDataClassError):
 
     def __str__(self) -> str:
         return f"{type(self._value)} does not match any type of {self._union!r}"
+
+
+if sys.version_info >= (3, 8):
+
+    class LiteralTypeMatchError(JsonDataClassError):
+        def __init__(self, literal: Type, value: Any):
+            self._literal = literal
+            self._value = value
+
+        def __str__(self) -> str:
+            return f"{self._value} does not match any value of {self._literal!r}"
